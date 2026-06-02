@@ -1,6 +1,11 @@
 const connectDB = require('../config/db');
 
 const ensureDbConnected = async (req, res, next) => {
+    // Skip database connection for preflight requests
+    if (req.method === 'OPTIONS') {
+        return next();
+    }
+
     try {
         await connectDB();
         next();

@@ -42,6 +42,7 @@ app.use((req, res, next) => {
     next();
 });
 
+// Apply database middleware to all /api routes (skips OPTIONS requests internally)
 app.use('/api', ensureDbConnected);
 
 app.use('/api/auth', require('./routes/auth'));
