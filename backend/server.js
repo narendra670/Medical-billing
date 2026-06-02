@@ -9,7 +9,7 @@ const app = express();
 // Get allowed origins from environment or use defaults
 const allowedOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-    : ['http://localhost:5173', 'http://localhost:5500', 'http://localhost:3000'];
+    : ['http://localhost:5173', 'http://localhost:7000', 'http://localhost:3000'];
 
 console.log('Allowed Origins:', allowedOrigins);
 
@@ -18,9 +18,10 @@ const corsOptions = {
     origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps, curl requests)
         if (!origin || allowedOrigins.includes(origin)) {
+            console.log(`✅ CORS ALLOWED for origin: ${origin || 'no-origin'}`);
             callback(null, true);
         } else {
-            console.warn(`CORS blocked for origin: ${origin}`);
+            console.warn(`❌ CORS BLOCKED for origin: ${origin}`);
             // Don't throw error, just silently reject for preflight
             callback(null, false);
         }
@@ -38,6 +39,7 @@ app.use(cors(corsOptions));
 
 // Explicitly handle preflight requests
 app.options('*', cors(corsOptions));
+console.log('✅ CORS middleware initialized');
 
 app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -84,7 +86,7 @@ process.on('uncaughtException', (err) => {
     console.error('Uncaught exception:', err);
 });
 
-const PORT = process.env.PORT || 5500;
+const PORT = process.env.PORT || 7000;
 
 if (!process.env.VERCEL) {
     connectDB().then(() => {
