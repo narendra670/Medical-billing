@@ -6,26 +6,38 @@ const ensureDbConnected = require('./middleware/db');
 
 const app = express();
 
+// Get allowed origins from environment or use defaults
 const allowedOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
     : ['http://localhost:5173', 'http://localhost:5500', 'http://localhost:3000'];
 
-app.use(cors({
+console.log('Allowed Origins:', allowedOrigins);
+
+// CORS configuration
+const corsOptions = {
     origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, curl requests)
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
-            callback(new Error('Not allowed by CORS'));
+            console.warn(`CORS blocked for origin: ${origin}`);
+            // Don't throw error, just silently reject for preflight
+            callback(null, false);
         }
     },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    optionsSuccessStatus: 200
-}));
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Content-Length', 'X-JSON-Response-Count'],
+    optionsSuccessStatus: 200,
+    maxAge: 3600
+};
 
-// Handle preflight requests explicitly
-app.options('*', cors());
+// Apply CORS to all routes
+app.use(cors(corsOptions));
+
+// Explicitly handle preflight requests
+app.options('*', cors(corsOptions));
 
 app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -49,11 +61,15 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/invoices', require('./routes/invoice'));
 app.use('/api/customers', require('./routes/customers'));
 
+// Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Unhandled error:', err);
+    console.error('Error:', err.message);
+
+    // Don't expose CORS errors as 403 - let CORS middleware handle it
     if (err.message === 'Not allowed by CORS') {
-        return res.status(403).json({ message: 'CORS not allowed' });
+        return res.status(403).json({ message: 'Request origin not allowed' });
     }
+
     res.status(err.status || 500).json({
         message: err.message || 'Internal server error',
         ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),

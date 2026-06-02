@@ -9,14 +9,43 @@ import Signup from './pages/Signup';
 import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 
+// Configure axios
+const configureAxios = () => {
+  let apiURL;
 
-// Set API base URL from environment variable
-const apiURL = import.meta.env.VITE_API_URL || 'http://localhost:5500';
-axios.defaults.baseURL = apiURL;
+  if (import.meta.env.PROD) {
+    // Production: Use VITE_API_URL from .env.production or window location
+    apiURL = import.meta.env.VITE_API_URL || window.location.origin;
+  } else {
+    // Development: Use localhost
+    apiURL = import.meta.env.VITE_API_URL || 'http://localhost:5500';
+  }
 
-// Ensure credentials are included in requests
-axios.defaults.withCredentials = true;
+  console.log('API URL configured to:', apiURL);
 
+  axios.defaults.baseURL = apiURL;
+  axios.defaults.withCredentials = true;
+
+  // Add request interceptor for debugging
+  axios.interceptors.request.use(
+    (config) => {
+      console.log('Request:', config.method.toUpperCase(), config.url);
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+
+  // Add response interceptor for error handling
+  axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      console.error('Response error:', error.response?.status, error.message);
+      return Promise.reject(error);
+    }
+  );
+};
+
+configureAxios();
 
 const App = () => {
   return (
