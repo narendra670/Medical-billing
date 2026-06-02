@@ -10,9 +10,12 @@ import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 
 
-if (import.meta.env.PROD) {
-  axios.defaults.baseURL = import.meta.env.VITE_API_URL || '';
-}
+// Set API base URL from environment variable
+const apiURL = import.meta.env.VITE_API_URL || 'http://localhost:5500';
+axios.defaults.baseURL = apiURL;
+
+// Ensure credentials are included in requests
+axios.defaults.withCredentials = true;
 
 
 const App = () => {
