@@ -9,7 +9,7 @@ const app = express();
 // Get allowed origins from environment or use defaults
 const allowedOrigins = process.env.CORS_ORIGIN
     ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-    : ['http://localhost:5173', 'http://localhost:7000', 'http://localhost:3000'];
+    : ['http://localhost:5173', 'http://localhost:5500', 'http://localhost:3000'];
 
 console.log('Allowed Origins:', allowedOrigins);
 
@@ -86,7 +86,7 @@ process.on('uncaughtException', (err) => {
     console.error('Uncaught exception:', err);
 });
 
-const PORT = process.env.PORT || 7000;
+const PORT = process.env.PORT || 5500;
 
 if (!process.env.VERCEL) {
     connectDB().then(() => {

@@ -15,7 +15,11 @@ const validateInput = (name, email, password) => {
 };
 
 exports.signup = async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, confirmPassword } = req.body;
+
+    if (password !== confirmPassword) {
+        return res.status(400).json({ message: 'Passwords do not match' });
+    }
 
     const validationErrors = validateInput(name, email, password);
     if (validationErrors.length > 0) {

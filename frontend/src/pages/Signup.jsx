@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { AuthContext } from '../context/AuthContext';
 
 const Signup = () => {
     const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ const Signup = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [loading, setLoading] = useState(false);
+    const { login } = useContext(AuthContext);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -40,14 +42,16 @@ const Signup = () => {
         setLoading(true);
 
         try {
-            await axios.post('/api/auth/signup', {
+            const res = await axios.post('/api/auth/signup', {
                 name: formData.name.trim(),
                 email: formData.email,
-                password: formData.password
+                password: formData.password,
+                confirmPassword: formData.confirmPassword
             });
 
-            toast.success('Account created successfully! Please login.');
-            navigate('/login');
+            login(res.data);
+            toast.success(`Welcome, ${res.data.user.name}!`);
+            navigate('/');
         } catch (err) {
             const message = err.response?.data?.message || 'Signup failed';
             toast.error(message);

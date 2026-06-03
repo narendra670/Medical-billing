@@ -11,20 +11,12 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 // Configure axios
 const configureAxios = () => {
-  let apiURL;
-
   if (import.meta.env.PROD) {
     // Production: Use VITE_API_URL from .env.production or window location
-    apiURL = import.meta.env.VITE_API_URL || window.location.origin;
-  } else {
-    // Development: Use localhost
-    apiURL = import.meta.env.VITE_API_URL || 'http://localhost:5500';
+    const apiURL = import.meta.env.VITE_API_URL || window.location.origin;
+    axios.defaults.baseURL = apiURL;
   }
-
-  console.log('API URL configured to:', apiURL);
-
-  axios.defaults.baseURL = apiURL;
-  axios.defaults.withCredentials = true;
+  // Development: requests go through Vite proxy (no baseURL needed)
 
   // Add request interceptor for debugging
   axios.interceptors.request.use(
