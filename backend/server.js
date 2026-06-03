@@ -6,23 +6,51 @@ const ensureDbConnected = require('./middleware/db');
 
 const app = express();
 
-// Get allowed origins from environment or use defaults
-const allowedOrigins = process.env.CORS_ORIGIN
-    ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-    : ['http://localhost:5173', 'http://localhost:5500', 'http://localhost:3000'];
+app.set('trust proxy', 1);
+
+const defaultOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5500',
+    'http://localhost:3000',
+];
+
+const allowedOriginPatterns = (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map((o) => o.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+
+const allowedOrigins =
+    allowedOriginPatterns.length > 0 ? allowedOriginPatterns : defaultOrigins;
+
+const normalizeOrigin = (origin) => (origin ? origin.replace(/\/$/, '') : '');
+
+const isOriginAllowed = (origin) => {
+    if (!origin) return true;
+    const normalized = normalizeOrigin(origin);
+    return allowedOrigins.some((allowed) => {
+        if (allowed.includes('*')) {
+            const pattern =
+                '^' +
+                allowed
+                    .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+                    .replace(/\*/g, '.*') +
+                '$';
+            return new RegExp(pattern).test(normalized);
+        }
+        return normalized === allowed;
+    });
+};
 
 console.log('Allowed Origins:', allowedOrigins);
 
 // CORS configuration
 const corsOptions = {
     origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps, curl requests)
-        if (!origin || allowedOrigins.includes(origin)) {
+        if (isOriginAllowed(origin)) {
             console.log(`✅ CORS ALLOWED for origin: ${origin || 'no-origin'}`);
             callback(null, true);
         } else {
             console.warn(`❌ CORS BLOCKED for origin: ${origin}`);
-            // Don't throw error, just silently reject for preflight
             callback(null, false);
         }
     },
@@ -54,6 +82,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use((req, res, next) => {
     console.log(`${req.method} ${req.url}`);
     next();
+});
+
+app.get('/', (req, res) => {
+    res.json({ ok: true, service: 'medical-store-api' });
+});
+
+app.get('/api/health', (req, res) => {
+    res.json({ ok: true });
 });
 
 // Apply database middleware to all /api routes (skips OPTIONS requests internally)

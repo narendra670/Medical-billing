@@ -8,15 +8,20 @@ import { Toaster } from 'react-hot-toast';
 import Signup from './pages/Signup';
 import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
+import { getApiBaseUrl } from './config/api';
 
 // Configure axios
 const configureAxios = () => {
-  if (import.meta.env.PROD) {
-    // Production: Use VITE_API_URL from .env.production or window location
-    const apiURL = import.meta.env.VITE_API_URL || window.location.origin;
-    axios.defaults.baseURL = apiURL;
+  const apiURL = getApiBaseUrl();
+  axios.defaults.baseURL = apiURL;
+
+  if (import.meta.env.PROD && !apiURL) {
+    console.info(
+      'API: using same-origin /api (set VITE_API_URL to your Render URL if you are not using Vercel rewrites)'
+    );
+  } else if (import.meta.env.PROD && apiURL) {
+    console.info('API base URL:', apiURL);
   }
-  // Development: requests go through Vite proxy (no baseURL needed)
 
   // Add request interceptor for debugging
   axios.interceptors.request.use(
