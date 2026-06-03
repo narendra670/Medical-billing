@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api, { setAuthToken } from '../api/client';
 import { jwtDecode } from 'jwt-decode';
 import toast from 'react-hot-toast';
 
@@ -21,7 +21,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('user');
         setToken(null);
         setUser(null);
-        delete axios.defaults.headers.common['Authorization'];
+        setAuthToken(null);
     }, []);
 
     const isTokenExpired = (token) => {
@@ -40,12 +40,12 @@ export const AuthProvider = ({ children }) => {
                 toast.error('Session expired. Please login again.');
                 return;
             }
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            setAuthToken(token);
         }
     }, [token, logout]);
 
     useEffect(() => {
-        const interceptor = axios.interceptors.response.use(
+        const interceptor = api.interceptors.response.use(
             (response) => response,
             (error) => {
                 if (error.response?.status === 401) {
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
                 return Promise.reject(error);
             }
         );
-        return () => axios.interceptors.response.eject(interceptor);
+        return () => api.interceptors.response.eject(interceptor);
     }, [logout]);
 
     const login = (data) => {

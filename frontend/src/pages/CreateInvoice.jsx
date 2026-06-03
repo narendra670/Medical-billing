@@ -2,7 +2,7 @@ import { useState, useContext, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import axios from 'axios';
+import api from '../api/client';
 import dayjs from 'dayjs';
 import PrintableInvoice from '../components/PrintableInvoice';
 
@@ -61,7 +61,7 @@ const CreateInvoice = () => {
         }
         setActiveRowIndex(index);
         try {
-            const res = await axios.get(`/api/invoices/medicines/search?name=${encodeURIComponent(searchTerm)}`);
+            const res = await api.get(`/api/invoices/medicines/search?name=${encodeURIComponent(searchTerm)}`);
             const results = res.data.medicines || [];
             setSearchResults(results.map(item => ({
                 displayName: item.display_name || 'Unknown',
@@ -103,7 +103,7 @@ const CreateInvoice = () => {
     const handleMobileSearch = async () => {
         if (!customer.mobile) return;
         try {
-            const res = await axios.get(`/api/customers?mobile=${customer.mobile}`);
+            const res = await api.get(`/api/customers?mobile=${customer.mobile}`);
             if (res.data) {
                 setCustomer({ name: res.data.name || '', mobile: res.data.mobile || '', address: res.data.address || '' });
                 toast.success('Customer found!');
@@ -126,7 +126,7 @@ const CreateInvoice = () => {
 
         setSaving(true);
         try {
-            const res = await axios.post('/api/invoices', { customer, items });
+            const res = await api.post('/api/invoices', { customer, items });
             toast.success('Invoice saved!');
             setSavedInvoice(res.data);
 
@@ -145,7 +145,7 @@ const CreateInvoice = () => {
         if (!savedInvoice) return;
         setDownloading(true);
         try {
-            const response = await axios.get(`/api/invoices/${savedInvoice._id}/pdf`, {
+            const response = await api.get(`/api/invoices/${savedInvoice._id}/pdf`, {
                 responseType: 'blob'
             });
             const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
@@ -168,7 +168,7 @@ const CreateInvoice = () => {
         if (!savedInvoice) return;
         setDownloading(true);
         try {
-            const response = await axios.get(`/api/invoices/${savedInvoice._id}/pdf`, {
+            const response = await api.get(`/api/invoices/${savedInvoice._id}/pdf`, {
                 responseType: 'blob'
             });
             const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));

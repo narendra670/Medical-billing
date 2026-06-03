@@ -12,6 +12,7 @@ const defaultOrigins = [
     'http://localhost:5173',
     'http://localhost:5500',
     'http://localhost:3000',
+    'https://medical-billing-8dh6.vercel.app',
 ];
 
 const allowedOriginPatterns = (process.env.CORS_ORIGIN || '')
@@ -24,9 +25,12 @@ const allowedOrigins =
 
 const normalizeOrigin = (origin) => (origin ? origin.replace(/\/$/, '') : '');
 
+const isVercelOrigin = (origin) => /^https:\/\/[a-z0-9-]+(-[a-z0-9-]+)*\.vercel\.app$/i.test(origin);
+
 const isOriginAllowed = (origin) => {
     if (!origin) return true;
     const normalized = normalizeOrigin(origin);
+    if (isVercelOrigin(normalized)) return true;
     return allowedOrigins.some((allowed) => {
         if (allowed.includes('*')) {
             const pattern =
@@ -54,7 +58,7 @@ const corsOptions = {
             callback(null, false);
         }
     },
-    credentials: true,
+    credentials: false,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     exposedHeaders: ['Content-Length', 'X-JSON-Response-Count'],
@@ -98,6 +102,10 @@ app.use('/api', ensureDbConnected);
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/invoices', require('./routes/invoice'));
 app.use('/api/customers', require('./routes/customers'));
+
+app.use((req, res) => {
+    res.status(404).json({ message: 'Not found', method: req.method, path: req.path });
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {

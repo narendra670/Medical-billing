@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api/client';
 import toast from 'react-hot-toast';
 import { AuthContext } from '../context/AuthContext';
 
@@ -42,7 +42,7 @@ const Signup = () => {
         setLoading(true);
 
         try {
-            const res = await axios.post('/api/auth/signup', {
+            const res = await api.post('/api/auth/signup', {
                 name: formData.name.trim(),
                 email: formData.email,
                 password: formData.password,

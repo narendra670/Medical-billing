@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import axios from 'axios';
+import api from '../api/client';
 import toast from 'react-hot-toast';
 import dayjs from 'dayjs';
 
@@ -18,7 +18,7 @@ const InvoiceList = () => {
 
     const fetchInvoices = async () => {
         try {
-            const res = await axios.get('/api/invoices');
+            const res = await api.get('/api/invoices');
             setInvoices(res.data);
         } catch (err) {
             toast.error('Failed to load invoices');
@@ -30,7 +30,7 @@ const InvoiceList = () => {
     const downloadPDF = async (invoice) => {
         setDownloadingId(invoice._id);
         try {
-            const response = await axios.get(`/api/invoices/${invoice._id}/pdf`, {
+            const response = await api.get(`/api/invoices/${invoice._id}/pdf`, {
                 responseType: 'blob'
             });
             const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
@@ -52,7 +52,7 @@ const InvoiceList = () => {
     const openPDF = async (invoice) => {
         setDownloadingId(invoice._id);
         try {
-            const response = await axios.get(`/api/invoices/${invoice._id}/pdf`, {
+            const response = await api.get(`/api/invoices/${invoice._id}/pdf`, {
                 responseType: 'blob'
             });
             const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
